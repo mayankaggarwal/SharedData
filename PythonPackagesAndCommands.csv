@@ -1,0 +1,38 @@
+DataFrame
+	.index
+	.values
+	.shape
+	.dtypes
+	.columns
+	.axes ()combination of index and columns
+	.get_dtype_counts()
+	.info()
+	
+
+Reading csv
+	pd.read_csv('employees.csv',parse_dates=["Start Date","Last Login Time"])
+
+Conversions
+	df[<columnName>].astype("int" or category or bool)
+	pd.to_datetime(df[<columnName>])
+
+Handling Null values
+	.dropna() #drop rows having any null values
+	.dropna(how='all').tail() #drop rows having all values as null and display tail
+	.dropna(how='all',inplace=True)
+	.dropna(axis = 1) #drop columns having any null values
+	.dropna(subset=['Salary']) #Checks only salary column for null values
+	.fillna(0) #not much usefull as it will replace all NaN with 0
+	df['Salary'].fillna(0,inplace=True)
+	df.isnull().any() #Check is any columm contains null values
+
+Filtering
+	df[(mask1 & mask2) | mask3]
+	df[<columnName>].isin(["Legal","Sales","Product"])
+	df[<columnName>].isnull()
+	df[<columnName>].notnull()
+	
+Sorting and Ranking
+	.sort_values(by='Name',ascending=False)
+	.sort_index(inplace=True)
+	df['Salary'].rank(ascending=False).astype('int')
