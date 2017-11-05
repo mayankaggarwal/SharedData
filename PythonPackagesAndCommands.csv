@@ -36,3 +36,6 @@ Sorting and Ranking
 	.sort_values(by='Name',ascending=False)
 	.sort_index(inplace=True)
 	df['Salary'].rank(ascending=False).astype('int')
+	
+Merging, aggregation
+	.groupby(['item_nbr','store_nbr']).agg({'unit_sales':'mean'})
