@@ -1,0 +1,108 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r Loading Packages, include=FALSE}
+library(data.table);
+library(ggplot2);
+library(dplyr);
+library(plyr);
+library(forecast);
+```
+
+Data Preprocessing
+
+```{r Setting Variables}
+test.length <- 365
+seasonality <- 365
+observation.freq <- "day"
+# Allowed values: "hour", "week", "day", "month", "week", "year"
+# Or any customized time difference, for example:
+# observation.freq <- difftime("2012-12-08 00:15:00 UTC", "2012-12-08 00:00:00 UTC")
+timeformat <- "%Y-%m-%d"
+## ----------------------------------------- ##
+
+input<- data.frame(test.length = test.length, seasonality = seasonality, 
+	observation.freq = observation.freq, timeformat = timeformat, stringsAsFactors = FALSE)
+
+```
+
+```{r Loading Data, include=FALSE}
+dataFolder <- 'D:/Competitions/CorporationGrocerySalesPrediction';
+data = fread(file.path(dataFolder,"trainstore1To4.csv"))
+data$id <- NULL
+```
+
+```{r Converting Datetime, include=FALSE}
+attach(input)
+min.length <- seasonality
+value.threshold <- 2
+data$date <- as.POSIXct(as.numeric(as.POSIXct(data$date, format = timeformat, tz = "UTC", origin = "1970-01-01"), tz = "UTC"), tz = "UTC", origin = "1970-01-01")
+data[data$unit_sales<0,"unit_sales"] <- NA
+data[is.na(data$onpromotion),"onpromotion"] <- FALSE
+data[,"onpromotion"] <- lapply(data[,"onpromotion"], as.numeric)
+```
+
+```{r Business Rules for time selecting time series}
+# apply business rules
+businessrule <- function(data){
+  # Train and test split
+  data.length <- dim(data)[1]
+  train.length <- data.length - test.length
+  
+  tsvalues <- data$unit_sales
+  
+  # Select Eligible Time Series based on training and testing principals:
+  # Rule 3: if the last 6 values in trainning set are all NA, discard
+  print(data$store_nbr[1])
+  print(data$item_nbr[1])
+  if (sum(is.na(tsvalues[(train.length - 19) : train.length])) == 20) return(c(judge = 3))
+  
+  # Rule 4: if test data has more than a half NA, discard
+  if (test.length > 0 && sum(is.na(tsvalues[(train.length+1):data.length])) > test.length / 2) return(c(judge = 4))
+  
+  return(c(judge = 0))
+}
+
+judge.all <- ddply(data, .(store_nbr, item_nbr), businessrule, .progress = "win")
+judge.good <- judge.all[judge.all$judge == 0, c("store_nbr", "item_nbr")]
+data.good <- join(data, judge.good, by = c("store_nbr", "item_nbr"), type = "left")
+```
+
+```{r}
+min.time <- min(data$date)
+max.time <- max(data$date)
+
+unique.time <- seq(from = min.time, to = max.time, by = observation.freq)
+
+# For every (ID1, ID2) pair, create (ID1, ID2, time) combination 
+unique.ID12 <- unique(data[, c("store_nbr","item_nbr")])
+comb.ID1 <- rep(unique.ID12$store_nbr, each = length(unique.time))
+comb.ID2 <- rep(unique.ID12$item_nbr, each = length(unique.time))
+comb.time <- rep(unique.time, times = dim(unique.ID12)[1])
+comb <- data.frame(store_nbr = comb.ID1, item_nbr = comb.ID2, date = comb.time)
+
+# Join the combination with original data
+data <- join(comb, data, by = c("store_nbr", "item_nbr", "date"), type = "left")
+
+```
+
+```{r Fourier Features}
+num.ts <- nrow(unique(data[, c("store_nbr", "item_nbr")]))
+ts.length <- nrow(data)/num.ts
+t <- (index(data) - 1) %% ts.length %% 365 
+
+for (s in 1:4){
+  data[[paste("FreqCos", toString(s), sep="")]] = cos(t*2*pi*s/365)
+  data[[paste("FreqSin", toString(s), sep="")]] = sin(t*2*pi*s/365)
+}
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
