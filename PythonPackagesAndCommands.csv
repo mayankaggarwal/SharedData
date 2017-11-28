@@ -39,3 +39,7 @@ Sorting and Ranking
 	
 Merging, aggregation
 	.groupby(['item_nbr','store_nbr']).agg({'unit_sales':'mean'})
+
+Packages
+	xlrd
+	openpyxl
