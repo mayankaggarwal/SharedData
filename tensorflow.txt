@@ -1,0 +1,20 @@
+to use a constant
+	var1 = tf.constant("Hello World")
+	sess.run(var1)
+
+to use non constant 
+	x = tf.placeholder(tf.string)
+	sess.run(x,feed_dict={x:'hello world'})
+	
+Applied the tf.add(), tf.subtract(), tf.multiply(), and tf.divide() functions using numeric data.
+Learned about casting between types with tf.cast(x,tf.int32)
+
+tf.placeholder() and tf.constant(), since those Tensors can't be modified. This is where tf.Variable class comes in.
+This tensor stores its state in the session, so you must initialize the state of the tensor manually. 
+You'll use the tf.global_variables_initializer() function to initialize the state of all the Variable tensors.
+
+Randomizing the weights helps the model from becoming stuck in the same place every time you train it. 
+You'll use the tf.truncated_normal() function to generate random numbers from a normal distribution.
+
+The tf.reduce_sum() function takes an array of numbers and sums them together.
+tf.log()

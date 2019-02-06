@@ -7,6 +7,7 @@ DataFrame
 	.axes ()combination of index and columns
 	.get_dtype_counts()
 	.info()
+	.drop(columns=['B', 'C']) #dropping columns B and C
 	
 
 Reading csv
@@ -14,7 +15,7 @@ Reading csv
 
 Conversions
 	df[<columnName>].astype("int" or category or bool)
-	pd.to_datetime(df[<columnName>])
+	pd.to_datetime(df[<columnName>],format='%Y-%m-%d %H:%M:%S')
 
 Handling Null values
 	.dropna() #drop rows having any null values
@@ -25,6 +26,19 @@ Handling Null values
 	.fillna(0) #not much usefull as it will replace all NaN with 0
 	df['Salary'].fillna(0,inplace=True)
 	df.isnull().any() #Check is any columm contains null values
+	
+Checking Missing values
+	missing_df = train_df.isnull().sum(axis=0).reset_index()
+	missing_df.columns = ['column_name', 'missing_count']
+	missing_df = missing_df[missing_df['missing_count']>0]
+	missing_df = missing_df.sort_values(by='missing_count')
+	missing_df
+	
+Columns with constant values
+	unique_df = train_df.nunique().reset_index()
+	unique_df.column = ['col_name','unique_count']
+	constant_df = unique_df[unique_df['unique_count']==1]
+	constant_df.shape
 
 Filtering
 	df[(mask1 & mask2) | mask3]
@@ -39,7 +53,40 @@ Sorting and Ranking
 	
 Merging, aggregation
 	.groupby(['item_nbr','store_nbr']).agg({'unit_sales':'mean'})
+	To find unique values and there counts
+		.groupby("<columnforuniquevalues>")["indexcolumn"].nunique()
+		df_train["onpromotion"].value_counts()
+		
+Finding Pearson or spearman correlation
+	from scipy.stats import spearmanr,pearsonr
+	values.append(spearmanr(df_train[col].values,df_train["medv"].values)[0])
+	spr = spearmanr(x, y).correlation
+	pcr = np.corrcoef(x, y)[0, 1]
+Rows of one column not present in another column
+	1. df[-df["column"].isin(["value"])]
+	2. df[~df["column"].isin(["value"])]
+	3. df[df["column"].isin(["value"]) == False]
+	4. df[np.logical_not(df["column"].isin(["value"]))]
 
+Creating ordinal variable
+	heads['floor'] = np.argmax(np.array(heads[['eviv1', 'eviv2', 'eviv3']]),axis = 1) # np.argmax returns the indices of maximum value along an axis
+	
 Packages
 	xlrd
 	openpyxl
+	pip install graphviz (visualizing decision trees)
+	conda install -c conda-forge hyperopt (for model hyperparameter optimization)
+	conda install -c conda-forge lightgbm
+	conda install -c conda-forge umap-learn (dimention reduction)
+	conda install -c conda-forge fbprophet (Prophet package for time series modelling)
+	
+	
+	
+Widgets
+	conda install -c conda-forge ipywidgets
+	jupyter nbextension enable --py --sys-prefix widgetsnbextension
+	
+Extensions
+https://codeburst.io/jupyter-notebook-tricks-for-data-science-that-enhance-your-efficiency-95f98d3adee4
+https://ndres.me/post/best-jupyter-notebook-extensions/
+	
